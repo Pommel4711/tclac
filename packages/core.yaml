@@ -9,7 +9,7 @@ external_components:
       type: git
       ref: esp-idf-dev
     components: [tclac]
-    refresh: 0s
+    refresh: 1d
 
 # Конфигурация ESPHome
 

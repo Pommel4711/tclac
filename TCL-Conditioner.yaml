@@ -42,7 +42,7 @@ packages:
       # - packages/leds.yaml
       # - packages/bad_connect.yaml
       # - packages/uart_speed.yaml
-    refresh: 0s
+    refresh: 1d
 
 # Выбранный модуль, прошиваемой этой прошивкой. Можно раскомментировать готовую заготовку, удалив имеющуюся:
 
