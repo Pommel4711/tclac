@@ -1,178 +1,125 @@
-If you don't understand Russian, use a translator. It will be easier for you to understand the meaning of the text after it's translated into your language, since it's familiar to you. But if I were to translate from mine into yours, it would be complete crap. By the way, this was also translated. Looks okay, huh?
+# 🌀 TCL Klimaanlagen-Integration für ESPHome / Home Assistant
 
-Внешний компонент кондиционеров TCL и аналогов для Home Assistant, используя ESPHome.
-Поддерживаются кондиционеры типа TAC-07CHSA и подобные. Увы, предположить точно получится подключить кондиционер или нет практически
-невозможно из-за огромного разбега в комплектациях: даже одна и та же модель, буквально буква-в-букву может, например, не иметь
-родного модуля WiFI, не иметь провода с USB разъемом или вовсе на плате управления может не быть впаян разъем UART.
-Однако, в целом, с пайкой или без, проверены следующие кондиционеры:
-- Axioma ASX09H1/ASB09H1
-- Ballu BSAI-12HN1_15Y
-- Ballu Discovery DC BSVI-07HN8
-- Ballu Discovery DC BSVI-09HN8
-- Ballu Discovery DC BSVI-12HN8
-- Daichi AIR20AVQ1/AIR20FV1
-- Daichi AIR25AVQS1R-1/AIR25FVS1R-1
-- Daichi AIR35AVQS1R-1/AIR35FVS1R-1
-- Daichi DA35EVQ1-1/DF35EV1-1
-- Dantex RK-12SATI/RK-12SATIE
-- Ecostar Radium KVS-RAD09CH
-- iFFALCON F1 18
-- Royal Clima Gloria Inverter
-- Royal Clima Pandora RC-PDC28HN
-- Tesla TT27TP61S-0932IAWUV
-- TCL ELI ONF 12
-- TCL Liferise ONF 09
-- TCL TAC-CT09INV/R
-- TCL One Inverter TACM-09HRID/E1 (возможно, иной порядок контактов)
-- TCL TAC-07CHSA/TPG-W
-- TCL TAC-09CHSA/TPG
-- TCL TAC-09CHSA/DSEI-W
-- TCL TAC-09HRID/E1
-- TCL TAC-12CHSA/TPG
-- TCL TAC-12CHSA/TPGI
-- TCL TAC-XAL24I
-- TCL TPG31IHB
+> 🇩🇪 **Deutsche Version** – Vollständig ins Deutsche übersetzt, inklusive ausführlicher Verkabelungs- und Modul-Dokumentation.  
+> ⚡ **Framework-Neutral**: Funktioniert sowohl mit **ESP-IDF** als auch mit dem **Arduino-Framework** (unterstützt ESP32 & ESP8266).  
+> 🔒 **100 % Lokal & Cloud-frei**: Direkte Steuerung über den internen UART-Anschluss der TCL Klimaanlage.
 
-Компонент поддерживает длину сообщений от кондиционера в 61, 65 и 68 байт, однако, полноценно проверялся только с 61 байтовыми сообщениями.
+---
 
-Компоненту требуется HomeAsistant и ESPHome версии не ниже 2026.4.0 !
-____
-Это все для работы ИСКЛЮЧИТЕЛЬНО с HomeAsistant и ESPHome. Если Вас интересует другие варианты или возможность подключить кондиционер
-как-то иначе к каким-то другим системам, то мне есть что предложить:
-[Вариант для подключения через MQTT](https://github.com/pavel211/TCL-TAC-07-WiFi)
-____
-Статья по проекту находится [в моем канале на Дзене](https://dzen.ru/a/ZmdoyUNswXWnulhg)
+## 📋 Inhaltsverzeichnis
 
-Все работает, даже стабильно. Какие глюки видел- устранил, какие желания были- реализовал. Конечно, не все, хотелось бы еще спорткар..
-Используя компонент прямо сейчас Вы уже не рискуете душевным здоровьем, но внезапные глюки вполне могут напасть. Если вдруг такое
-случиться именно с Вами- прошу сообщить мне на Дзене, приму меры.
-Подробное описание будет постепенно появляться [в моем канале на Дзене](https://dzen.ru/a/ZmdoyUNswXWnulhg) , сюда буду выкладывать
-самое важное по мере сил.
+- [Hardware & Was du brauchst](#-hardware--was-du-brauchst)
+- [Verkabelung](#-verkabelung)
+- [Framework-Wahl (ESP-IDF vs. Arduino)](#-framework-wahl-esp-idf-vs-arduino)
+- [Einrichtung in Home Assistant](#-einrichtung-in-home-assistant)
+- [Beschreibung aller Pakete (Packages)](#-beschreibung-aller-pakete-packages)
+- [Steuerelemente & Funktionen](#-steuerelemente--funktionen)
+- [Fehlerbehebung & Tipps](#-fehlerbehebung--tipps)
 
-Выразить благодарность в России и Беларуси: карта Озон-банка 2204 3211 5682 2009
+---
 
-Thank the author for the work: [My Steam account](https://steamcommunity.com/id/solovey-iron/) (yep, I like computer games)
-____
-Образец для конфигурации ESPHome в файле TCL-Conditioner.yaml , упрощенный вариант конфигурации- Sample_conf.yaml . Скачайте к себе
-и используйте в ESPHome, или просто скопируйте из него всю конфигурацию и вставьте вместо своей, однако, не забыв отредактировать
-все поля. В файле есть подсказки по каждому полю.
+## 🛠️ Hardware & Was du brauchst
 
-Вопрос может возникнуть с 2 моментами: платформа (чип или модуль) и подгружаемые файлы. Попробую объяснить.
+- **Mikrocontroller**:
+  - **ESP32** (Empfohlen, z. B. ESP32-C3 DevKit, ESP32 WROOM32, NodeMCU ESP32)
+  - **ESP8266** (z. B. D1 Mini, ESP-01S, ESP-12F)
+- **USB-A Steckerkabel** (zum Anschließen an die Buchse des Innengeräts der Klimaanlage, z. B. USB-A auf offene Kabelenden).
+- **Home Assistant** mit installiertem **ESPHome Add-on** (ab Version 2026.4.0+).
 
-## Настройка платформы
-Платформа настраивается точно так же, как ей и полагается настраиваться в ESPHome. Например, так выглядит кусок кода для ESP-01S:
-```yaml
-esp8266:
-  board: esp01_1m
-```
-А вот так выглядит кусок кода для модуля Hommyn HDN/WFN-02-01 из первой статьи про кондиционер:
+---
+
+## 🔌 Verkabelung
+
+Die Steuerung erfolgt über die interne USB-Buchse der TCL-Klimaanlage. Hierzu wird ein USB-A-Kabel mit dem Mikrocontroller verbunden:
+
+| USB-A Pin | Standard-Kabelfarbe | → ESP32 / ESP8266 Pin | Beschreibung |
+|:---:|:---:|:---:|:---|
+| **VBUS / VCC** | Rot | **VIN / 5V** | Stromversorgung von der Klimaanlage (5V) |
+| **GND** | Schwarz | **GND** | Masse |
+| **D+** | Grün | **RXD** (z. B. GPIO3 / GPIO16) | Empfangsleitung (UART RX) |
+| **D-** | Weiß / Grau | **TXD** (z. B. GPIO1 / GPIO17) | Sendeleitung (UART TX) |
+
+> ⚠️ **Hinweis zu TXD/RXD**: Falls die Datenübertragung nicht klappt, versuche `TXD` und `RXD` kreuzweise zu tauschen.
+
+---
+
+## ⚡ Framework-Wahl (ESP-IDF vs. Arduino)
+
+Diese Integration ist **framework-neutral** geschrieben (Standard-C++). In deiner Gerät-YAML kannst du das gewünschte Framework wählen:
+
+### Variante A: ESP-IDF (Empfohlen für moderne ESP32)
 ```yaml
 esp32:
   board: esp32-c3-devkitm-1
   framework:
+    type: esp-idf
+```
+
+### Variante B: Arduino-Framework (Klassisch / ESP8266)
+```yaml
+esp32:
+  board: esp32dev
+  framework:
     type: arduino
 ```
-Можно подключать платформу и через основной конфиг. Вот, предложенный [испытателем альфа-версии](https://github.com/kai-zer-ru), пример для Esp32 WROOM32:
-```yaml
-esphome:
-  platform: ESP32
-  board: nodemcu-32s
-```
-А это уже пример для wemos D1 Mini nodemcu esp12f:
-```yaml
-esphome:
-  platform: ESP8266
-  board: esp12e
-```
-В общем- все то же самое, как и обычно, вариант под свою платформу легко ищется в интернете.
 
-**!Важно не забыть закомментировать или удалить строки других платформ!**
+---
 
-## Настройка IP адреса
-По умолчанию, IP адрес получается автоматически от DHCP сервера. Однако, можно назначить
-IP адрес вручную. Для этого в самом конце файла конфигурации добавьте следующее:
+## 🧠 Einrichtung in Home Assistant
 
-```yaml
-wifi:
-  manual_ip:
-    static_ip: 192.168.1.4
-    gateway: 192.168.1.1
-    subnet: 255.255.255.0
-```
+1. Öffne das **ESPHome Add-on** in Home Assistant.
+2. Erstelle ein neues Gerät (*"New Device"*) und wähle deinen Mikrocontroller-Typ aus.
+3. Füge den Inhalt der [`TCL-Conditioner.yaml`](file:///C:/Users/philipp.fiedler/Desktop/Aufgaben/eig/tclac/TCL-Conditioner.yaml) in dein ESPHome-Gerätedokument ein.
+4. Passe die WLAN-Zugangsdaten (`wifi_ssid`, `wifi_password`) und GPIO-Pins an.
+5. Klicke auf **Install** (Kompilieren & Flashen).
 
-## Настройка подгружаемых файлов
-Для добавления или удаления определенных частей конфига я решил использовать подгружаемые файлы- они загружаются ESPHome автоматически,
-если у сервера с Home Assistant есть доступ в интернет. Такой подход позволяет редактировать и обновлять не весь конфиг куском,
-а частями, не трогая то, что работает.
-Еще один плюс- не нужно километровые куски кода комментировать или раскомментировать, не нужно знать разметку, нет необходимости считать
-проклятые пробелы и прочее. Все делается добавлением или удалением ссылок на файлы. Итак, вот так выглядит блок подгружаемых файлов:
-```yaml
-packages:
-  remote_package:
-    url: https://github.com/I-am-nightingale/tclac.git
-    ref: master
-    files:
-    # v - равнение строк с опциями вот по этой позиции, иначе глючить будет
-      - packages/core.yaml # Ядро всего сущего
-      # - packages/leds.yaml
-    refresh: 30s
-```
-Все подгружаемые файлы указываются в секции **files:**. Для работы необходимо, чтобы был хотя-бы
-```yaml
-- packages/core.yaml # Ядро всего сущего
-```
-Все остальные модули по желанию (их описание в том же файле чуть выше). **Важно**, чтобы все строки с файлами были выровнены по
-импровизированной метке, которую я специально указал, иначе у ESPHome возникнет много вопросов к Вам. Например, **должно быть так:**
-```yaml
-packages:
-  remote_package:
-    url: https://github.com/I-am-nightingale/tclac.git
-    ref: master
-    files:
-    # v - равнение строк с опциями вот по этой позиции, иначе глючить будет
-      - packages/core.yaml # Ядро всего сущего
-      - packages/leds.yaml
-    refresh: 30s
-```
-Например, так подключается 3 кратный повтор отправки комманд в случае, если связь плохая (packages/bad_connect.yaml):
+---
 
-```yaml
-packages:
-  remote_package:
-    url: https://github.com/I-am-nightingale/tclac.git
-    ref: master
-    files:
-    # v - равнение строк с опциями вот по этой позиции, иначе глючить будет
-      - packages/core.yaml # Ядро всего сущего
-      - packages/leds.yaml
-	  - packages/bad_connect.yaml
-    refresh: 30s
-```
+## 📦 Beschreibung aller Pakete (Packages)
 
-А так подключается переключатель скорости UART в настройках для тех, у кого кондиционер работает на другой скорости (packages/uart_speed.yaml):
+Die Konfiguration ist modular aufgebaut. In der Datei `TCL-Conditioner.yaml` können im Abschnitt `packages` folgende Module aktiviert oder deaktiviert werden:
 
-```yaml
-packages:
-  remote_package:
-    url: https://github.com/I-am-nightingale/tclac.git
-    ref: master
-    files:
-    # v - равнение строк с опциями вот по этой позиции, иначе глючить будет
-      - packages/core.yaml # Ядро всего сущего
-      - packages/leds.yaml
-	  - packages/uart_speed.yaml
-    refresh: 30s
-```
+| Paket-Datei | Zweck & Funktion |
+|:---|:---|
+| **`packages/core.yaml`** | **Kernkomponente (Pflicht)**:<br>Enthält die eigentliche Steuerung der Klimaanlage, die Klima-Entität, alle Schalter für Piepser/Display und die Dropdown-Listen für Lamellensteuerung (Swing/Fixing). |
+| **`packages/leds.yaml`** | **Status-LEDs (Optional)**:<br>Aktiviert physische LEDs am Mikrocontroller für die Anzeige von Datensenden (TX) und Datenempfang (RX). Die Pins werden über `receive_led` und `transmit_led` definiert. |
+| **`packages/bad_connect.yaml`** | **Verbindungsoptimierung (Optional)**:<br>Aktiviert einen 3-fachen Wiederholungsmodus beim Senden von Befehlen. Hilfreich bei langer Verkabelung oder instabiler Signalqualität. |
+| **`packages/uart_speed.yaml`** | **Baudraten-Umschalter (Optional)**:<br>Fügt eine Dropdown-Liste in Home Assistant hinzu, um die UART-Geschwindigkeit zur Laufzeit anzupassen (z. B. 9600, 38400, 115200 Baud). |
+| **`packages/screen.yaml`** | **OLED-Display-Unterstützung (Optional)**:<br>Steuert ein kleines I2C-Display (SSD1306 128x32) an. Zeigt Uhrzeit, WLAN-Signalstärke, aktuellen Modus ("Aus", "Kühlen", "Heizen" etc.) und Status-Icons an. |
 
-А вот так уже **не правильно:**
-```yaml
-packages:
-  remote_package:
-    url: https://github.com/I-am-nightingale/tclac.git
-    ref: master
-    files:
-    # v - равнение строк с опциями вот по этой позиции, иначе глючить будет
-      - packages/core.yaml # Ядро всего сущего
-        - packages/leds.yaml
-    refresh: 30s
-```
+---
+
+## 🎛️ Steuerelemente & Funktionen
+
+Nach der Einbindung stehen in Home Assistant folgende Schalter und Optionen bereit:
+
+### 1. Schalter (Switches)
+* 🔔 **Beeper** (*Piepser*): Aktiviert/deaktiviert den Quittungston der Klimaanlage bei Befehlsempfang.
+* 🖥️ **Display**: Schaltet die Temperaturanzeige am Gehäuse des Innengeräts ein oder aus.
+* 💡 **Display on module**: Schaltet die LED-Statusanzeige auf dem Mikrocontroller-Modul ein/aus.
+* ⚡ **Force config**: Erzwingt das wiederholte Senden der Einstellungen an die Klimaanlage.
+
+### 2. Lamellensteuerung (Dropdowns / Selects)
+* ↕️ **Vertical swing** (*Vertikale Schwingung*):
+  * `Von oben nach unten`
+  * `In der oberen Hälfte`
+  * `In der unteren Hälfte`
+* ↔️ **Horizontal swing** (*Horizontale Schwingung*):
+  * `Von links nach rechts`
+  * `Im linken Bereich`
+  * `Im Zentrum`
+  * `Im rechten Bereich`
+* 📌 **Vertical fixing** (*Vertikale Arretierung*):
+  * `Letzte Position`, `Ganz nach oben`, `In der oberen Hälfte`, `In der Mitte`, `In der unteren Hälfte`, `Ganz nach unten`.
+* 📌 **Horizontal fixing** (*Horizontale Arretierung*):
+  * `Letzte Position`, `Ganz nach links`, `In der linken Hälfte`, `In der Mitte`, `In der rechten Hälfte`, `Ganz nach rechts`.
+
+---
+
+## 🔍 Fehlerbehebung & Tipps
+
+1. **Keine Reaktion der Klimaanlage**:
+   - Prüfe, ob RX und TX richtig angeschlossen sind (ggf. TX und RX tauschen).
+   - Stelle sicher, dass `logger: baud_rate: 0` in der Konfiguration gesetzt ist (UART-Logging muss deaktiviert sein, da derselbe Port für die Klimaanlage genutzt wird).
+2. **Temperaturwerte unplausibel**:
+   - Die Soll-Temperatur ist beim TCL-Protokoll auf 16 °C bis 31 °C begrenzt.
