@@ -399,4 +399,3 @@ Nach der Integration stehen folgende Steuerelemente zur Verfügung:
 - 🌟 **Originales Upstream-Repository**: [I-am-nightingale/tclac](https://github.com/I-am-nightingale/tclac) (Russisches Originalprojekt)
 - 📡 **MQTT-Alternative**: Wer die Klimaanlage nicht über ESPHome, sondern über MQTT anbinden möchte: [TCL-TAC-07-WiFi von pavel211](https://github.com/pavel211/TCL-TAC-07-WiFi)
 - 📝 **Artikel & Anleitung auf Dzen**: [Blogartikel des Autors auf Dzen](https://dzen.ru/a/ZmdoyUNswXWnulhg)
-- 🎮 **Dank an den Entwickler**: [Steam-Profil des Original-Autors](https://steamcommunity.com/id/solovey-iron/) (solovey-iron)
